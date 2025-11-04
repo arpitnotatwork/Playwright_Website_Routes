@@ -1,0 +1,8 @@
+playwright
+pytest
+pyyaml
+pillow
+openpyxl
+requests
+pytest-html
+allure-pytest
