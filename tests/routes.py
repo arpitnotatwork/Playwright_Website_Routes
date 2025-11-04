@@ -3,6 +3,8 @@ import urllib.parse
 import openpyxl
 from openpyxl.styles import Font, Alignment
 from datetime import datetime
+import os
+
 
 def extract_routes_from_site(base_url: str):
     routes = set()
@@ -31,7 +33,7 @@ def extract_routes_from_site(base_url: str):
             browser.close()
             return []
 
-        # Handle optional “Continue” button
+        # Optional: Handle a “Continue” button (if present)
         try:
             page.get_by_role("button", name="Continue").click(timeout=3000)
             print("Clicked 'Continue' button")
@@ -39,25 +41,25 @@ def extract_routes_from_site(base_url: str):
         except Exception:
             print("No 'Continue' button found or already bypassed")
 
-        # Wait for final page load
+        # Ensure content is fully loaded
         try:
             page.wait_for_load_state("networkidle", timeout=10000)
         except PlaywrightTimeoutError:
             print("⚠️ 'networkidle' never reached, continuing anyway...")
             page.wait_for_load_state("load", timeout=5000)
 
-        # Scroll to ensure lazy content is loaded
+        # Scroll for lazy content
         for _ in range(3):
             page.evaluate("window.scrollBy(0, document.body.scrollHeight / 3)")
             page.wait_for_timeout(1000)
 
-        # Collect all <a> tags
+        # Collect all <a> links
         links = page.eval_on_selector_all("a[href]", "els => els.map(e => e.href)")
         parsed_base = urllib.parse.urlparse(base_url)
 
         for link in links:
             parsed_link = urllib.parse.urlparse(link)
-            if parsed_link.netloc == parsed_base.netloc:  # internal links only
+            if parsed_link.netloc == parsed_base.netloc:  # internal only
                 routes.add(parsed_link.path)
 
         context.close()
@@ -69,7 +71,15 @@ def extract_routes_from_site(base_url: str):
 def save_routes_to_excel(routes, base_url):
     # Extract domain for filename
     domain = urllib.parse.urlparse(base_url).netloc.replace("www.", "")
-    filename = f"{domain}_routes.xlsx"
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    filename = f"{domain}_routes_{date_str}.xlsx"
+
+    # 📁 Create reports directory if missing
+    reports_dir = "reports"
+    os.makedirs(reports_dir, exist_ok=True)
+
+    # Full path for saving file
+    filepath = os.path.join(reports_dir, filename)
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -82,7 +92,7 @@ def save_routes_to_excel(routes, base_url):
     # Style headers
     for cell in ws[1]:
         cell.font = Font(bold=True, color="1F4E78")
-        cell.alignment = Alignment(horizontal="center")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
 
     # Data rows
     for i, route in enumerate(routes, start=1):
@@ -94,12 +104,12 @@ def save_routes_to_excel(routes, base_url):
         ws.column_dimensions[col[0].column_letter].width = max_length + 2
 
     # Save Excel
-    wb.save(filename)
-    print(f"\n💾 Saved {len(routes)} routes to '{filename}'")
+    wb.save(filepath)
+    print(f"\n💾 Saved {len(routes)} routes to '{filepath}'")
 
 
 if __name__ == "__main__":
-    BASE_URL = "https://muvro-frontend.vercel.app/" # Replace with your target URL
+    BASE_URL = "https://muvro-frontend.vercel.app/"  # Replace with your target URL
     routes = extract_routes_from_site(BASE_URL)
 
     if routes:

@@ -1,3 +1,4 @@
+import os
 from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 from openpyxl import Workbook
@@ -6,7 +7,7 @@ def extract_api_routes(base_url):
     api_routes = set()
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)  # True Or False 
+        browser = p.chromium.launch(headless=True)  # True Or False
         context = browser.new_context()
         page = context.new_page()
 
@@ -47,7 +48,12 @@ if __name__ == "__main__":
     site_name = parsed.netloc.replace("www.", "").split("/")[0]
     site_name = site_name.split(".")[0]
 
-    excel_filename = f"{site_name}_api_routes.xlsx"
+    # 📂 Create 'reports' folder if not exists
+    reports_dir = "reports"
+    os.makedirs(reports_dir, exist_ok=True)
+
+    # 📄 Define Excel file path inside reports folder
+    excel_filename = os.path.join(reports_dir, f"{site_name}_api_routes.xlsx")
 
     if routes:
         # ✅ Create Excel workbook
