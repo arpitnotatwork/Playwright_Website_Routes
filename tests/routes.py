@@ -109,7 +109,7 @@ def save_routes_to_excel(routes, base_url):
 
 
 if __name__ == "__main__":
-    BASE_URL = "https://muvro-frontend.vercel.app/"  # Replace with your target URL
+    BASE_URL = ""  #  <-------- Replace with your target URL
     routes = extract_routes_from_site(BASE_URL)
 
     if routes:

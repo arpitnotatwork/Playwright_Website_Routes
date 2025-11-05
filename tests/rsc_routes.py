@@ -69,4 +69,4 @@ def find_rsc_routes(base_url):
 
 # 🧪 Example
 if __name__ == "__main__":
-    find_rsc_routes("https://muvro-frontend.vercel.app/")
+    find_rsc_routes("")   # 🔁 replace with your target site
