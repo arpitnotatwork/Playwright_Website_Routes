@@ -39,8 +39,21 @@ def extract_api_routes(base_url):
     return api_routes
 
 
+def extract_api_name(url):
+    """
+    Extract a readable API name from the URL.
+    Example: https://example.com/api/v1/users/list -> users/list
+    """
+    path = urlparse(url).path.strip("/")
+    if not path:
+        return "root"
+    # remove versioning or api prefix
+    parts = [p for p in path.split("/") if p.lower() not in ["api", "v1", "v2", "rest"]]
+    return "/".join(parts[-2:]) if len(parts) >= 2 else parts[-1]
+
+
 if __name__ == "__main__":
-    base_url = "https://www.tech2globe.com/"  # 🔁 replace with your target site
+    base_url = ""  # 🔁 replace with your target site
     routes = extract_api_routes(base_url)
 
     # 🧠 Extract site name from URL
@@ -62,11 +75,12 @@ if __name__ == "__main__":
         ws.title = "API Routes"
 
         # ✅ Write header row
-        ws.append(["HTTP Method", "URL"])
+        ws.append(["API Name", "HTTP Method", "URL"])
 
         # ✅ Write each API route
         for method, url in sorted(routes):
-            ws.append([method, url])
+            api_name = extract_api_name(url)
+            ws.append([api_name, method, url])
 
         # ✅ Save Excel file
         wb.save(excel_filename)
